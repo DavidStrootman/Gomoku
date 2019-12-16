@@ -6,15 +6,22 @@ import MCTS_node
 import time
 import math
 
+def deepcopy(arr):
+    return arr[:]
+
+def deepcopy2d(arr):
+    return [row[:] for row in arr]
+
 class MCTS:
     def __init__(self, game, max_time, black):
         self.game = game
         self.max_time = max_time
         self.black = black
 
-        self.root_node = MCTS_node.MCTSNode(self.game.current_board(), None, self.game.valid_moves(), 0, None)
+        self.current_board = deepcopy2d(self.game.board)
+        self.root_node = MCTS_node.MCTSNode(self.current_board.copy(), None, self.game.valid_moves(), 0, None)
         self.start_time = time.time_ns()
-        self.exploration_term = 10
+        self.exploration_term = 0.11
 
     def best_move(self):
         while (self.max_time * 1_000_000) / 2 > time.time_ns() - self.start_time:
@@ -29,6 +36,7 @@ class MCTS:
             print("not enough time to create child node/slow code maybe")
         self.root_node = best_child
         self.game.move(best_child.current_move)
+        self.current_board = self.game.current_board()
 
         return best_child.current_move
 
@@ -55,7 +63,7 @@ class MCTS:
             new_move = random.choice(parent_node.unexplored_moves)
 
             parent_node.unexplored_moves.remove(new_move)
-            new_board = self.game.current_board()
+            new_board = self.game.current_board_unsafe()
             new_valid_moves = self.game.empty.copy()
             new_valid_moves.remove(new_move)
             if parent_node.unexplored_moves == 0:
@@ -67,20 +75,18 @@ class MCTS:
         return self.find_spot_to_expand(highest_uct_node)
 
     def rollout(self, node):
-        simulated_game = gomoku.gomoku_game(self.game.bsize, self.game.current_board(), self.game.ply + 1, self.game.empty.copy())
+        simulated_game = gomoku.gomoku_game(self.game.bsize, deepcopy2d(self.current_board), self.game.ply + 1, self.game.empty.copy())
         new_move = node.current_move
         while not node.terminal:
             available_moves = list(set(simulated_game.valid_moves()) & set(node.unexplored_moves))
             new_move = random.choice(available_moves)
-            simulated_game.move(new_move)
+            win = simulated_game.move(new_move)[1]
             node.unexplored_moves.remove(new_move)
-            if node.unexplored_moves == 0:
+            if node.unexplored_moves == 0 or win:
                 node.terminal = True
             # Create a new node with the current move, parent node and its unexplored moves
-            new_node = MCTS_node.MCTSNode(simulated_game.current_board(), node, node.unexplored_moves.copy(), node.depth + 1, new_move)
+            new_node = MCTS_node.MCTSNode(simulated_game.current_board_unsafe(), node, node.unexplored_moves.copy(), node.depth + 1, new_move)
             node.add_child(new_node)
-            node = new_node
-        # check_win returns a bool
         node.final_state = simulated_game.check_win(new_move)
         return node.final_state
 
@@ -93,4 +99,3 @@ class MCTS:
             else:
                 node.n_wins += val
             node = node.parent_node
-

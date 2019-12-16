@@ -14,7 +14,7 @@ class MCTSPlayer:
         self.simulation_game = None
         self.debug_alg = None
 
-        self.round = 0
+        self.round = 1
 
     def new_game(self, black_):
         """At the start of each new game you will be notified by the competition.
@@ -22,8 +22,9 @@ class MCTSPlayer:
         will play black or white.
         """
         self.black = black_
-        if self.round == 1:
+        if self.round == 2:
             self.simulation_game = gomoku.gomoku_game(bsize_=self.board_size)
+        self.round += 1
 
     def move(self, board, last_move, valid_moves, max_time_to_move=1000):
         """This is the most important method: the agent will get:
@@ -38,8 +39,8 @@ class MCTSPlayer:
             self.simulation_game = gomoku.gomoku_game(bsize_=len(board[0]))
         if last_move is not None:
             self.simulation_game.move(last_move)
-        self.debug_alg = MCTS.MCTS(self.simulation_game, max_time_to_move, self.black)
-        best_move = self.debug_alg.best_move()
+        alg = MCTS.MCTS(self.simulation_game, max_time_to_move, self.black)
+        best_move = alg.best_move()
         return best_move
 
     def id(self):

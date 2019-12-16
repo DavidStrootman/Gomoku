@@ -1,5 +1,6 @@
 import gomoku
 import random_player
+import Yasuo
 import MCTS_player
 import time
 
@@ -84,12 +85,14 @@ class competition:
 ##Now follows the main script for running the competition
 # At present the competition consists of just three random dummy players playing each other
 # When the students submit a player file, they should be entered one by one.
-game = gomoku.gomoku_game()
-player = MCTS_player.MCTSPlayer()
-# player2 = MCTS_player.MCTSPlayer()
-player2 = random_player.random_dummy_player()
-comp = competition(bsize_=19)
-comp.register_player(player)
-comp.register_player(player2)
-comp.play_competition(maxtime_per_move=900)
-comp.print_scores()
+for i in range(10):
+    game = gomoku.gomoku_game()
+    player = MCTS_player.MCTSPlayer()
+    # player2 = MCTS_player.MCTSPlayer()
+    # player2 = random_player.random_dummy_player()
+    player3 = Yasuo.yasuo()
+    comp = competition(bsize_=19)
+    comp.register_player(player)
+    comp.register_player(player3)
+    comp.play_competition(maxtime_per_move=1000)
+    comp.print_scores()
